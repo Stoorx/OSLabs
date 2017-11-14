@@ -18,7 +18,7 @@ then
     newFiles=""
     renamedFiles=""
 
-    validBackupName= $(ls '~' | egrep 'Backup-[0-9]{4}-[0-9]{2}-[0-9]{2}' | tail -n1)
+    validBackupName=$(ls '~' | egrep 'Backup-[0-9]{4}-[0-9]{2}-[0-9]{2}' | tail -n1)
     validBackup=$(ls -R "~/$validBackupName")
     filesForBackup=$(ls -R "~/source")
     dateInRFC=$(date +%F)
@@ -26,14 +26,14 @@ then
     do
         if [[ ! -e "~/$validBackupName/$FILE" ]]
         then
-            cp -t "~/source/$FILE" "~/$validBackupName/" && newFiles="$newFiles\n$FILE"
+            cp -tp "~/source/$FILE" "~/$validBackupName/" && newFiles="$newFiles\n$FILE"
         else
             backupFileSize=$(wc -c ~/$validBackupName/$FILE | awk '{print $1}')
             fileSize=$(wc -c ~/source/$FILE | awk '{print $1}')
             
             if[[ $backupFileSize == $fileSize ]]
             then
-                mv "~/$validBackupName/$FILE" "~/$validBackupName/$FILE.$dateInRFC" && cp "~/source/$FILE" "~/$validBackupName/$FILE" && renamedFiles="$renamedFiles\n$FILE $FILE.$dateInRFC"
+                mv "~/$validBackupName/$FILE" "~/$validBackupName/$FILE.$dateInRFC" && cp -p "~/source/$FILE" "~/$validBackupName/$FILE" && renamedFiles="$renamedFiles\n$FILE $FILE.$dateInRFC"
             else
             fi
         fi
@@ -43,5 +43,5 @@ then
 else
     backupName="Backup-$(date +%F)"
     echo "$(date +'%F %T') Try to make the $backupName"
-    mkdir $backupName && echo "$(date +'%F %T') $backupName directory created." >> "~/backup-report" && cp -rxt "~/source/*" "~/backupName/" && echo "$(date +'%F %T') Copying done." >> "~/backup-report" && echo "$(date +'%F %T') Copied files:" >> "~/backup-report" && echo $(ls -RFC "~/$backupName") >> "~/backup-report" || echo "$(date +'%F %T') Backup error." 2> /dev/null
+    mkdir $backupName && echo "$(date +'%F %T') $backupName directory created." >> "~/backup-report" && cp -rxpt "~/source/*" "~/backupName/" && echo "$(date +'%F %T') Copying done." >> "~/backup-report" && echo "$(date +'%F %T') Copied files:" >> "~/backup-report" && echo $(ls -RFC "~/$backupName") >> "~/backup-report" || echo "$(date +'%F %T') Backup error." 2> /dev/null
 fi
