@@ -25,6 +25,6 @@ echo $newId > $idStore
 
 ln "./$trashFile" $dotTrash/$newId
 
-echo $PWD/$1**$newId >> $dotTrashLog
+echo $PWD/$1*$newId >> $dotTrashLog
 rm "./$trashFile"
 
