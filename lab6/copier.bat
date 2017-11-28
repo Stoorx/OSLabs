@@ -1,0 +1,1 @@
+xcopy /Z "D:\CentOS_6_10.vdi" \\%computername%\temp\trash.vdi

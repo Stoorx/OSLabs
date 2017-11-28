@@ -1,0 +1,4 @@
+::1
+driverquery /FO table /NH > "C:\LAB6\drivers.txt"
+::2
+sort /R "C:\LAB6\drivers.txt" /o "C:\LAB6\driversReverseSorted.txt"
