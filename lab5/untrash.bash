@@ -1,66 +1,89 @@
 #!/bin/bash
 
-dotTrash="~/.trash"
-dotTrashLog="~/.trash.log"
+dotTrash="$HOME/.trash"
+dotTrashLog="$HOME/.trash.log"
+
+if [[ $# -ne 1 ]]
+then
+	echo "Incorrect parameters!"
+	exit -1
+fi
 
 if [[ ! -d "$dotTrash" ]]
 then
-    echo "Trash directory not found!"
-    exit -2
+    	echo "Trash directory not found!"
+    	exit -2
 fi
 
-allLog=$(cat "$dotTrashLog")
+filesForRestore=$(cat "$dotTrashLog" | egrep "$1\*[0-9]+$")
 
-for LINE in "$allLog"
+for line in $filesForRestore
 do
-    if [[ "$LINE" == .*/$1\*[0-9]+$ ]]
-    then
-        filePath=$(echo "$LINE" | cut -d * -f 1 )
-        fileName=$(basename "$filePath")
-        trashName=$(echo "$LINE" | cut -d * -f 2)
-        echo "Do you want to restore $filePath [Y/N]?"
-        read UserAnswer
-        if [[ $UserAnswer == "N" || $UserAnswer == "n" ]]
-        then
-            echo "File will not be restored"
-            newLog="$newLog$LINE\n"
-        else #if user wants to restore
-            if [[ ! -f "$dotTrash/$trashName" ]]
-            then
-                echo "File was losted"
-                continue
-            fi
-            if [[ -d "$filePath" ]]
-            then
-                echo "Restore to HOME?"
-                read UserAnswer
-                if [[ $UserAnswer == "Y" || $UserAnswer == "y" ]]
-                then
-                    if [[ -f "~/$fileName" ]] # if same file exists
-                    then
-                        echo "File with same name exists. Add ID to name or pass it? [Y/N]"
-                        read UserAnswer
-                        if [[ $UserAnswer == "Y" | $UserAnswer == "y" ]]
-                        then
-                            ln "$dotTrash/$trashName" "~/$fileName$trashName"
-                            rm -f "$dotTrash/$trashName"
-                        else
-                            newLog="$newLog$LINE\n"
-                        fi
-                    fi
-                else
-                    newLog="$newLog$LINE\n"
-                fi
-            else
-                ln "$dotTrash/$trashName" "$filePath" && echo "File $fileName was restored" || echo "File $fileName was not restored!"
-                rm -f "$dotTrash/$trashName"
-            fi
-        fi
-    else
-        newLog="$newLog$LINE\n"
-    fi
+	filenamefull=$(echo "$line" | cut -d* -f1)
+	filepath=$(dirname "$filenamefull")
+	fileid=$(echo "$line" | cut -d* -f2)	
+	echo -n "Restore $filenamefull? [Y/N]> "
+	read userAnswer
+	if [[ $userAnswer == "Y" || $userAnswer == "y" ]]
+	then
+		if [[ ! -d $HOME/$(echo "$filenamefull" | basename)"$filepath" ]]
+		then
+			echo -n "Restore $1 to $HOME? [Y/N]> "
+			read userAnswer
+			if [[ $userAnswer == "Y" || $userAnswer == "y" ]]
+			then
+				if [[ -f $filenamefull ]]
+				then
+					echo -n "File is already exists. Add ID or relpace file? [A/R]> "
+					if [[ $userAnswer == "A" || $userAnswer == "a" ]]
+					then
+						ln "$dotTrash/$fileid" "$HOME/$(echo '$filenamefull' | basename).$fileid"
+						rm -f "$dotTrash/$fileid"
+						grep -Ev "\*$fileid$" "$dotTrashLog" > "$dotTrashLog"
+						echo "File: $1 was restored successfully."
+					else
+						rm -f "$filenamefull"
+						ln "$dotTrash/$fileid" "$HOME/$(echo '$filenamefull' | basename)"
+						rm -f "$dotTrash/$fileid"
+						grep -Ev "\*$fileid$" "$dotTrashLog" > "$dotTrashLog"
+						echo "File: $1 was restored successfully."
+					fi
+				else
+					ln "$dotTrash/$fileid" "$filenamefull"
+					rm -f "$dotTrash/$fileid"
+					grep -Ev "\*$fileid$" "$dotTrashLog" > "$dotTrashLog"
+					echo "File: $1 was restored successfully."
+				fi
+			else
+				echo "File: $filenamefull will not be restored."			
+			fi			
+		else
+			if [[ -f $filenamefull ]]
+			then
+				echo -n "File is already exists. Add ID or relpace file? [A/R]> "
+				if [[ $userAnswer == "A" || $userAnswer == "a" ]]
+				then
+					ln "$dotTrash/$fileid" "$filenamefull.$fileid"
+					rm -f "$dotTrash/$fileid"
+					grep -Ev "\*$fileid$" "$dotTrashLog" > "$dotTrashLog"
+					echo "File: $1 was restored successfully."
+				else
+					rm -f "$filenamefull"
+					ln "$dotTrash/$fileid" "$filenamefull"
+					rm -f "$dotTrash/$fileid"
+					grep -Ev "\*$fileid$" "$dotTrashLog" > "$dotTrashLog"
+					echo "File: $1 was restored successfully."
+				fi
+			else
+				ln "$dotTrash/$fileid" "$filenamefull"
+				rm -f "$dotTrash/$fileid"
+				grep -Ev "\*$fileid$" "$dotTrashLog" > "$dotTrashLog"
+				echo "File: $1 was restored successfully."
+			fi
+		fi
+	else
+		echo "File: $filenamefull will not be restored."
+	fi
 done
 
-echo -e "$newLog" > "$dotTrashLog"
 
-        
