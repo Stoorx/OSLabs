@@ -1,67 +1,57 @@
 #!/bin/bash
 
-if [[ ! -d "$HOME/source" ]]
+if [[ ! -d "$HOME/source" ]] ;
 then
-    echo "$HOME/source not found!"
-    exit 1
+	echo "$HOME/source directory not found"
+	exit 1
 fi
 
-lastPWD=$PWD
-cd $HOME
-currentDate=$(date +%s)
+sourceDir="$HOME/source"
+logFile="$HOME/backup-report.txt"
 
-lastBackupName="$(ls $HOME | egrep 'Backup-[0-9]{4}-[0-9]{2}-[0-9]{2}' | egrep -o '[0-9]{4}-[0-9]{2}-[0-9]{2}' | tail -n1)"
+currentDate=$(date +%F)
+currentDateSec=$(date -d "$currentDate" +%s)
 
-if [[ $lastBackupName == "" ]]
+lastBackupName=$(ls "$HOME/" -l | grep -oE "Backup-[0-9]{4}-[0-9]{2}-[0-9]{2}" | tail -n1)
+lastBackupDate=$(date -d $(echo "$lastBackupName" | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}") +%s 2> /dev/null)
+newFiles=""
+renamedFiles=""
+if [[ lastBackupDate == "" ]]
 then
 	lastBackupDate=0
-else
-	lastBackupDate=$(date -d $lastBackupName +%s)
 fi
 
-difference=$[$[$currentDate-$lastBackupDate]/604800]
+difference=$[$[$currentDateSec - $lastBackupDate] / 86400]
 
-if [[ difference < 7 ]]
+if (( $difference > 7 )) ;
 then
-    log="$(date +'%F %T') $validBackupName is modified."
-    newFiles=""
-    renamedFiles=""
-
-    validBackupName=$(ls "$HOME" | egrep 'Backup-[0-9]{4}-[0-9]{2}-[0-9]{2}' | tail -n1)
-    validBackup=$(ls -R "$HOME/$validBackupName")
-    filesForBackup=$(ls -R "$HOME/source")
-    dateInRFC=$(date +%F)
-    for FILE in $filesForBackup
-    do
-
-        if [[ ! -e "$HOME/$validBackupName/$FILE" ]]
-        then
-        	cp -tp "$HOME/source/$FILE" "$HOME/$validBackupName/"
-		newFiles="$newFiles\n$FILE"
-        else
-            backupFileSize=$(wc -c $HOME/$validBackupName/$FILE | awk '{print $1}')
-            fileSize=$(wc -c $HOME/source/$FILE | awk '{print $1}')
-            
-            if [[ $backupFileSize -ne $fileSize ]]
-            then
-                mv "$HOME/$validBackupName/$FILE" "$HOME/$validBackupName/$FILE.$dateInRFC" && cp -p "$HOME/source/$FILE" "$HOME/$validBackupName/$FILE" && renamedFiles="$renamedFiles\n$FILE $FILE.$dateInRFC"	
-		
-            fi
-        fi
-    done
-    log="$log\nNew files:\n$newFiles\nRenamed files:\n$renamedFiles"
-    echo -e $log >> "$HOME/backup-report"
-else
-    backupName="Backup-$(date +%F)"
-    echo "$(date +'%F %T') Try to make the $backupName"
-    mkdir $backupName
-    echo "$(date +'%F %T') $backupName directory created." >> "$HOME/backup-report" 
-	for file in $(find "$HOME/source" -depth -type f)
+	backupFolderName="Backup-$currentDate"
+	mkdir -p --verbose "$HOME/$backupFolderName" || echo "Can't create backup direction" || exit 2
+	echo "Backup directory $HOME/$backupFolderName was created on $currentDate" >> "$logFile"
+	for FILE in $(find "$sourceDir" -type f)
 	do
-	cp $file "$HOME/$backupName/" #2> /dev/null #|| ( echo "$(date +'%F %T') Backup error." 2> /dev/null && exit 1)
-	done	
-	echo "$(date +'%F %T') Copying done." >> "$HOME/backup-report"
-	echo "$(date +'%F %T') Copied files:" >> "$HOME/backup-report"
-	echo $(ls -RFC "$HOME/$backupName") >> "$HOME/backup-report"
+		cp -p "$FILE" "$HOME/$backupFolderName" && echo $(basename "$FILE") >> "$logFile"
+	done 
+else
+	backupFolderName="$HOME/$lastBackupName"
+	echo "Backup directory $backupFolderName was changed on $currentDate" >> "$logFile"
+	for FILE in $(find "$sourceDir" -type f)
+	do
+		baseFileName=$(basename "$FILE")
+		if [[ ! -f "$backupFolderName/$baseFileName" ]];
+		then
+			cp "$FILE" "$backupFolderName"
+            newFiles="${newFiles}\n${baseFileName}"
+		else
+			backupFileSize=$(wc -c "$backupFolderName/$baseFileName" | awk '{print $1}')
+			fileSize=$(wc -c "$FILE" | awk '{print $1}')
+            
+			if [[ "$backupFileSize" -ne "$fileSize" ]];
+			then
+				mv "$backupFolderName/$baseFileName" "$backupFolderName/${baseFileName}.${currentDate}" && cp -p "$FILE" "$backupFolderName/$baseFileName" 
+                renamedFiles="${renamedFiles}\n${baseFileName} ${baseFileNAme}.${currentDate}"
+			fi
+		fi
+	done
+	echo -e "New files:${newFiles}\nRenamed Files:${renamedFiles}" >> "$logFile"
 fi
-cd $lastPWD

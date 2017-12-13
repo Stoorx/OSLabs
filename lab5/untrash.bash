@@ -34,21 +34,30 @@ do
 			read userAnswer
 			if [[ $userAnswer == "Y" || $userAnswer == "y" ]]
 			then
-
-				if [[ -f "$HOME/$1" ]]
+				if [[ ! -d "$HOME/$1" ]]
 				then
-					echo -n "File is already exists. Add ID or relpace file? [A/R]> "
-					read userAnswer
-					if [[ $userAnswer == "A" || $userAnswer == "a" ]]
+					if [[ -f "$HOME/$1" ]]
 					then
-						ln "$dotTrash/$fileid" "$HOME/$1.$fileid"
-						rm -f "$dotTrash/$fileid"
-						cat $dotTrashLog | egrep -v "\*$fileid$" > "tmp.tmp"
-						cat "tmp.tmp" > $dotTrashLog
-						rm -f "tmp.tmp"
-						echo "File: $1 was restored successfully."
+						echo -n "File is already exists. Add ID or relpace file? [A/R]> "
+						read userAnswer
+						if [[ $userAnswer == "A" || $userAnswer == "a" ]]
+						then
+							ln "$dotTrash/$fileid" "$HOME/$1.$fileid"
+							rm -f "$dotTrash/$fileid"
+							cat $dotTrashLog | egrep -v "\*$fileid$" > "tmp.tmp"
+							cat "tmp.tmp" > $dotTrashLog
+							rm -f "tmp.tmp"
+							echo "File: $1 was restored successfully."
+						else
+							rm -f "$HOME/$1"
+							ln "$dotTrash/$fileid" "$HOME/$1"
+							rm -f "$dotTrash/$fileid"
+							cat $dotTrashLog | egrep -v "\*$fileid$" > "tmp.tmp"
+							cat "tmp.tmp" > $dotTrashLog
+							rm -f "tmp.tmp"
+							echo "File: $1 was restored successfully."
+						fi
 					else
-						rm -f "$HOME/$1"
 						ln "$dotTrash/$fileid" "$HOME/$1"
 						rm -f "$dotTrash/$fileid"
 						cat $dotTrashLog | egrep -v "\*$fileid$" > "tmp.tmp"
@@ -57,31 +66,41 @@ do
 						echo "File: $1 was restored successfully."
 					fi
 				else
-					ln "$dotTrash/$fileid" "$HOME/$1"
+					ln "$dotTrash/$fileid" "$HOME/$1.$fileid"
 					rm -f "$dotTrash/$fileid"
 					cat $dotTrashLog | egrep -v "\*$fileid$" > "tmp.tmp"
 					cat "tmp.tmp" > $dotTrashLog
 					rm -f "tmp.tmp"
-					echo "File: $1 was restored successfully."
+					echo "File: $1 was restored successfully. But renamed to $1.$fileid"
 				fi
 			else
 				echo "File: $filenamefull will not be restored."			
 			fi			
 		else
-			if [[ -f $filenamefull ]]
-			then
-				echo -n "File is already exists. Add ID or relpace file? [A/R]> "
-				read userAnswer				
-				if [[ $userAnswer == "A" || $userAnswer == "a" ]]
+			if [[ ! -d $filenamefull ]]	
+			then	
+				if [[ -f $filenamefull ]]
 				then
-					ln "$dotTrash/$fileid" "$filenamefull.$fileid"
-					rm -f "$dotTrash/$fileid"
-					cat $dotTrashLog | egrep -v "\*$fileid$" > "tmp.tmp"
-					cat "tmp.tmp" > $dotTrashLog
-					rm -f "tmp.tmp"
-					echo "File: $1 was restored successfully."
+					echo -n "File is already exists. Add ID or relpace file? [A/R]> "
+					read userAnswer				
+					if [[ $userAnswer == "A" || $userAnswer == "a" ]]
+					then
+						ln "$dotTrash/$fileid" "$filenamefull.$fileid"
+						rm -f "$dotTrash/$fileid"
+						cat $dotTrashLog | egrep -v "\*$fileid$" > "tmp.tmp"
+						cat "tmp.tmp" > $dotTrashLog
+						rm -f "tmp.tmp"
+						echo "File: $1 was restored successfully."
+					else
+						rm -f "$filenamefull"
+						ln "$dotTrash/$fileid" "$filenamefull"
+						rm -f "$dotTrash/$fileid"
+						cat $dotTrashLog | egrep -v "\*$fileid$" > "tmp.tmp"
+						cat "tmp.tmp" > $dotTrashLog
+						rm -f "tmp.tmp"
+						echo "File: $1 was restored successfully."
+					fi
 				else
-					rm -f "$filenamefull"
 					ln "$dotTrash/$fileid" "$filenamefull"
 					rm -f "$dotTrash/$fileid"
 					cat $dotTrashLog | egrep -v "\*$fileid$" > "tmp.tmp"
@@ -90,12 +109,12 @@ do
 					echo "File: $1 was restored successfully."
 				fi
 			else
-				ln "$dotTrash/$fileid" "$filenamefull"
+				ln "$dotTrash/$fileid" "$filenamefull.$fileid"
 				rm -f "$dotTrash/$fileid"
 				cat $dotTrashLog | egrep -v "\*$fileid$" > "tmp.tmp"
 				cat "tmp.tmp" > $dotTrashLog
 				rm -f "tmp.tmp"
-				echo "File: $1 was restored successfully."
+				echo "File: $1 was restored successfully. But renamed to $1.$fileid"
 			fi
 		fi
 	else
