@@ -1,7 +1,7 @@
 ::1
 mkdir "C:\LAB6"
 systeminfo > "C:\LAB6\systeminfo.txt"
-diskpart /s ":\LAB6\diskinfo.txt" > "C:\LAB6\diskpart.txt"
+diskpart /s "Ñ:\LAB6\diskinfo.txt" > "C:\LAB6\diskpart.txt"
 
 ::2
 mkdir "C:\LAB6\TEST"
@@ -11,10 +11,12 @@ copy "C:\LAB6\*" "C:\LAB6\TEST\"
 dir "C:\LAB6" /B /A:-D > "C:\LAB6\dir.txt"
 
 ::4
+@echo off
 for /f "tokens=*" %%a in ('dir /b /od') do (
         set lastfile=%%a
 )
-for %%a in (%*) do (
+
+for /f "tokens=*" %%a in ('dir /b /od') do (
         if %%a == %lastfile% (
                 echo not delete: %%a
         ) else (

@@ -3,7 +3,7 @@ echo %computername%
 ::2
 xcopy /Z "D:\CentOS_6_10.vdi" \\%computername%\temp\trash.vdi
 ::3
-schtasks /create /SC MINUTE /TN "EachMinuteTime" /TR "C:\LAB6\eachminute.bat"
+schtasks /create /SC MINUTE /TN "EachMinuteCopy" /TR "C:\LAB6\copier.bat"
 ::4
 xcopy /Z "D:\CentOS_6_10.vdi" \\%computername%\temp\trash.vdi
 ::5
